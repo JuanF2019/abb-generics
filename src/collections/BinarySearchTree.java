@@ -61,29 +61,64 @@ public class BinarySearchTree<K extends Comparable<K>,V> implements Tree<K,V>{
 	}
 
 	@Override
-	public Node<K,V> remove(K key) {
-		return null;
-		/*Node<K,V> nodeToRemove = search(key);
-		
-		if(nodeToRemove.getLeft() == null && nodeToRemove.getRight() == null) {
-			nodeToRemove.getFather().set
+	public Node<K,V> remove(K key) {	
+		if(root != null) {
+			return removeRecursive(key,root,null);
 		}
-		else if(nodeToRemove.getLeft() != null && nodeToRemove.getRight() != null) {
-			
-		}		
 		else {
-			
-		}		
-		
-		
-		return nodeToRemove;*/
+			return null;
+		}
 	}
 	
-	private Node<K,V> getMax(Node<K,V> node) {
-		while(node.getRight() != null) {
-			node = node.getRight();
+	private Node<K,V> removeRecursive(K key, Node<K,V> currentNode, Node<K,V> parent){
+		if(key.compareTo(currentNode.getKey()) == 0) {
+			if(currentNode.getLeft() == null && currentNode.getRight() == null) {
+				if(parent.getRight() == currentNode) {
+					parent.setRight(null);
+				}
+				else {
+					parent.setLeft(null);
+				}
+			}
+			else if(currentNode.getLeft() != null && currentNode.getRight() == null) {
+				currentNode.getLeft().setFather(parent);
+				if(parent.getRight() == currentNode) {					
+					parent.setRight(currentNode.getLeft());
+				}
+				else {
+					parent.setLeft(currentNode.getLeft());
+				}
+			}
+			else if(currentNode.getLeft() == null && currentNode.getRight() != null) {
+				currentNode.getRight().setFather(parent);
+				if(parent.getRight() == currentNode) {					
+					parent.setRight(currentNode.getLeft());
+				}
+				else {
+					parent.setLeft(currentNode.getLeft());
+				}
+			}
+			else {
+				Node<K,V> toReplace = getMin(currentNode.getRight());
+				
+				K keySave = currentNode.getKey();
+				V valueSave = currentNode.getValue();
+				
+				currentNode.setKey(toReplace.getKey());
+				currentNode.setValue(toReplace.getValue());
+				
+				removeRecursive(toReplace.getKey(),currentNode.getRight(),currentNode);
+				
+				currentNode = new Node<K,V>(keySave, valueSave); //So that returned node does not have relations in the list but has the attributes of the "deleted" node.
+			}
+			return currentNode;
 		}
-		return node;	
+		else if(key.compareTo(currentNode.getKey()) >  0) {
+			return removeRecursive(key, currentNode.getRight(),currentNode);
+		}
+		else {
+			return removeRecursive(key, currentNode.getLeft(),currentNode);
+		}	
 	}
 	
 	private Node<K,V> getMin(Node<K,V> node){
