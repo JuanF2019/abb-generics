@@ -6,7 +6,7 @@ public interface Tree<K extends Comparable<K>,V> {
 	public Node<K,V> remove(K key);
 	public Node<K,V> search(K key);
 	public int getWeight();
-	public int getDepth();
+	public int getDepth(Node<K, V> root);
 	public void preOrder();
 	public void inOrder();
 	public void postOrder();
