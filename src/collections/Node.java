@@ -15,8 +15,8 @@ public class Node<K extends Comparable<K>,V> {
 	}
 
 	public void update() {
-		int lh =  left != null? ((AVLTreeNode<K,V>)left).height:0;
-		int rh =  right != null? ((AVLTreeNode<K,V>)right).height:0;
+		int lh =  left != null? left.height:0;
+		int rh =  right != null? right.height:0;
 		
 		height = ((lh > rh)? lh : rh) + 1;
 	}

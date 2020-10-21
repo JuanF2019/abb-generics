@@ -56,7 +56,8 @@ public class BinarySearchTree<K extends Comparable<K>,V> implements BinarySearch
 			}
 			
 			else {				
-				currentNode.setRight(newNode);				
+				currentNode.setRight(newNode);	
+				newNode.setParent(currentNode);
 				weight++;				
 				return newNode;				
 			}			
@@ -75,7 +76,8 @@ public class BinarySearchTree<K extends Comparable<K>,V> implements BinarySearch
 			}
 			
 			else {				
-				currentNode.setLeft(newNode);				
+				currentNode.setLeft(newNode);	
+				newNode.setParent(currentNode);
 				weight++;				
 				return newNode;				
 			}			
@@ -122,54 +124,79 @@ public class BinarySearchTree<K extends Comparable<K>,V> implements BinarySearch
 	//--------------------------------------------------------------------------------
 	
 	private boolean removeRecursive(K key, Node<K,V> currentNode, Node<K,V> parent){
-		if(key.compareTo(currentNode.getKey()) == 0) {
-			if(currentNode.getLeft() == null && currentNode.getRight() == null) {
-				if(parent.getRight() == currentNode) {
-					parent.setRight(null);
-				}
-				else {
-					parent.setLeft(null);
-				}
+		if(currentNode != null) {
+			if(key.compareTo(currentNode.getKey()) < 0) {
+				return removeRecursive(key, currentNode.getLeft(),currentNode);
 			}
-			else if(currentNode.getLeft() != null && currentNode.getRight() == null) {
-				currentNode.getLeft().setParent(parent);
-				if(parent.getRight() == currentNode) {					
-					parent.setRight(currentNode.getLeft());
-				}
-				else {
-					parent.setLeft(currentNode.getLeft());
-				}
-			}
-			else if(currentNode.getLeft() == null && currentNode.getRight() != null) {
-				currentNode.getRight().setParent(parent);
-				if(parent.getRight() == currentNode) {					
-					parent.setRight(currentNode.getLeft());
-				}
-				else {
-					parent.setLeft(currentNode.getLeft());
-				}
+			else if(key.compareTo(currentNode.getKey()) >  0) {
+				return removeRecursive(key, currentNode.getRight(),currentNode);
 			}
 			else {
-				Node<K,V> toReplace = getMin(currentNode.getRight());
-				
-				K keySave = currentNode.getKey();
-				V valueSave = currentNode.getValue();
-				
-				currentNode.setKey(toReplace.getKey());
-				currentNode.setValue(toReplace.getValue());
-				
-				removeRecursive(toReplace.getKey(),currentNode.getRight(),currentNode);
-				
-				currentNode = new Node<K,V>(keySave, valueSave); //So that returned node does not have relations in the list but has the attributes of the "deleted" node.
+				if(currentNode.getLeft() == null && currentNode.getRight() == null) {
+					
+					if(currentNode == root) {
+						root = null;
+					}
+					else {
+						if(parent.getRight() != null && parent.getRight() == currentNode) {					
+							parent.setRight(null);
+						}
+						else {
+							parent.setLeft(null);
+						}						
+					}					
+					
+				}
+				else if(currentNode.getRight() == null) {	
+					
+					if(currentNode == root) {
+						root.getLeft().setParent(null);
+						root = root.getLeft();
+					}
+					else {
+						currentNode.getLeft().setParent(parent);
+												
+						if(parent.getRight() != null && parent.getRight() == currentNode)				
+							parent.setRight(currentNode.getLeft());
+							
+						else
+							parent.setLeft(currentNode.getLeft());						
+					}
+					
+					
+				}
+				else if(currentNode.getLeft() == null) {
+					
+					if(currentNode == root) {
+						root.getRight().setParent(null);
+						root = root.getRight();
+					}
+					else {
+						currentNode.getRight().setParent(parent);
+						
+						if(parent.getRight() != null && parent.getRight() == currentNode)					
+							parent.setRight(currentNode.getRight());
+						else
+							parent.setLeft(currentNode.getRight());
+					}
+					
+				}
+				else {
+					Node<K,V> rightMin = getMin(currentNode.getRight());
+										
+					currentNode.setKey(rightMin.getKey());
+					currentNode.setValue(rightMin.getValue());					
+					
+					removeRecursive(rightMin.getKey(),rightMin,rightMin.getParent());		
+					
+				}
+				weight--;
+				return true;				
 			}
-			return true;
-		}
-		else if(key.compareTo(currentNode.getKey()) >  0) {
-			return removeRecursive(key, currentNode.getRight(),currentNode);
 		}
 		else {
-			return removeRecursive(key, currentNode.getLeft(),currentNode);
-		}	
+			return false;
+		}
 	}
 	
 	//--------------------------------------------------------------------------------
@@ -369,6 +396,11 @@ public class BinarySearchTree<K extends Comparable<K>,V> implements BinarySearch
 	*/
 	public boolean isEmpty() {			
 		return root == null;
+	}
+
+	//For testing purposes
+	protected Node<K,V> getRoot() {
+		return root;
 	}
 	
 	//--------------------------------------------------------------------------------
