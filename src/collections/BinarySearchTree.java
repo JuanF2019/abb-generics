@@ -1,12 +1,12 @@
 package collections;
 
-public class BinarySearchTree<K extends Comparable<K>,V> implements Tree<K,V>{
+public class BinarySearchTree<K extends Comparable<K>,V> implements BinarySearchTreeInterface<K,V>{
 	
 	//--------------------------------------------------------------------------------
 	
-	private Node<K,V> root;
+	protected Node<K,V> root;
 	
-	private int weight;
+	protected int weight;
 	
 	//--------------------------------------------------------------------------------
 
@@ -18,80 +18,71 @@ public class BinarySearchTree<K extends Comparable<K>,V> implements Tree<K,V>{
 	
 	//--------------------------------------------------------------------------------
 	
+	//Adds equal elements to the right, always adds the element
 	public boolean add(K key, V value) {
+		return addBase(key,value) != null;
+	}
 		
-		if(root != null) {
-			
-			return addRecursive(key,value,root);
-			
-		}
+	protected Node<K,V> addBase(K key, V value) {
 		
-		else {
-			
-			root = new Node<K,V>(key,value);
-			
-			weight++;
-			
-			return true;
-			
-		}	
+		Node<K,V> newNode = new Node<K,V>(key,value);
 		
+		if(root != null) {		
+			return addRecursive(key,value,root,newNode);			
+		}		
+		else {			
+			root = newNode;			
+			weight++;			
+			return root;			
+		}			
 	}
 	
 	//--------------------------------------------------------------------------------
 	
-	private boolean addRecursive(K key, V value, Node<K,V> currentNode){
+	private Node<K,V> addRecursive(K key, V value, Node<K,V> currentNode, Node<K,V> newNode){
 		
 		if(key.compareTo(currentNode.getKey()) > 0) {
 			
 			Node<K,V> right = currentNode.getRight();
 			
-			if(right != null) {
+			if(right != null) {		
+				Node<K,V> addedNode = addRecursive(key,value,right,newNode);
 				
-				return addRecursive(key,value,right);
+				if(addedNode != null) {
+					right.update();
+				}				
 				
+				return addedNode;		
 			}
 			
-			else {
-				
-				currentNode.setRight(new Node<K,V>(key,value));
-				
-				weight++;
-				
-				return true;
-				
-			}
-			
-		}
-		
-		else if(key.compareTo(currentNode.getKey()) < 0){
-			
+			else {				
+				currentNode.setRight(newNode);				
+				weight++;				
+				return newNode;				
+			}			
+		}		
+		else if(key.compareTo(currentNode.getKey()) < 0) {			
 			Node<K,V> left = currentNode.getLeft();
 			
-			if(left != null) {
+			if(left != null) {				
+				Node<K,V> addedNode =  addRecursive(key,value,left,newNode);	
 				
-				return addRecursive(key,value,left);
-				
+				if(addedNode != null) {
+					left.update();
+				}
+								
+				return addedNode;
 			}
 			
-			else {
-				
-				currentNode.setLeft(new Node<K,V>(key,value));
-				
-				weight++;
-				
-				return true;
-				
-			}
-			
+			else {				
+				currentNode.setLeft(newNode);				
+				weight++;				
+				return newNode;				
+			}			
 		}	
-		
 		else {
-			
-			return false;
-			
+			return null;
 		}
-		
 	}
 	
 	//--------------------------------------------------------------------------------
@@ -99,7 +90,7 @@ public class BinarySearchTree<K extends Comparable<K>,V> implements Tree<K,V>{
 	@Override
 	public boolean update(K key, V value) {
 		
-		Node<K,V> nodeToUpdate = search(key);
+		Node<K,V> nodeToUpdate = searchNode(key);
 		
 		if(nodeToUpdate != null) {
 			nodeToUpdate.setValue(value);
@@ -119,21 +110,18 @@ public class BinarySearchTree<K extends Comparable<K>,V> implements Tree<K,V>{
 	//--------------------------------------------------------------------------------
 
 	@Override
-	public Node<K,V> remove(K key) {	
+	public boolean remove(K key) {	
 		if(root != null) {
-			return removeRecursive(key,root,null);
-			
-		}
-		
-		
+			return removeRecursive(key,root,null);			
+		}		
 		else {
-			return null;
+			return false;
 		}
 	}
 	
 	//--------------------------------------------------------------------------------
 	
-	private Node<K,V> removeRecursive(K key, Node<K,V> currentNode, Node<K,V> parent){
+	private boolean removeRecursive(K key, Node<K,V> currentNode, Node<K,V> parent){
 		if(key.compareTo(currentNode.getKey()) == 0) {
 			if(currentNode.getLeft() == null && currentNode.getRight() == null) {
 				if(parent.getRight() == currentNode) {
@@ -144,7 +132,7 @@ public class BinarySearchTree<K extends Comparable<K>,V> implements Tree<K,V>{
 				}
 			}
 			else if(currentNode.getLeft() != null && currentNode.getRight() == null) {
-				currentNode.getLeft().setFather(parent);
+				currentNode.getLeft().setParent(parent);
 				if(parent.getRight() == currentNode) {					
 					parent.setRight(currentNode.getLeft());
 				}
@@ -153,7 +141,7 @@ public class BinarySearchTree<K extends Comparable<K>,V> implements Tree<K,V>{
 				}
 			}
 			else if(currentNode.getLeft() == null && currentNode.getRight() != null) {
-				currentNode.getRight().setFather(parent);
+				currentNode.getRight().setParent(parent);
 				if(parent.getRight() == currentNode) {					
 					parent.setRight(currentNode.getLeft());
 				}
@@ -174,7 +162,7 @@ public class BinarySearchTree<K extends Comparable<K>,V> implements Tree<K,V>{
 				
 				currentNode = new Node<K,V>(keySave, valueSave); //So that returned node does not have relations in the list but has the attributes of the "deleted" node.
 			}
-			return currentNode;
+			return true;
 		}
 		else if(key.compareTo(currentNode.getKey()) >  0) {
 			return removeRecursive(key, currentNode.getRight(),currentNode);
@@ -201,7 +189,7 @@ public class BinarySearchTree<K extends Comparable<K>,V> implements Tree<K,V>{
 	//--------------------------------------------------------------------------------
 	
 	@Override
-	public Node<K,V> search(K key) {	
+	public V search(K key) {	
 		
 		if(root != null) {
 			
@@ -219,11 +207,11 @@ public class BinarySearchTree<K extends Comparable<K>,V> implements Tree<K,V>{
 	
 	//--------------------------------------------------------------------------------
 	
-	private Node<K,V> searchRecursive(K key, Node<K,V> currentNode){	
+	private V searchRecursive(K key, Node<K,V> currentNode){	
 		
 		if(key.compareTo(currentNode.getKey()) == 0) {
 			
-			return currentNode;
+			return currentNode.getValue();
 			
 		}
 		
@@ -241,18 +229,54 @@ public class BinarySearchTree<K extends Comparable<K>,V> implements Tree<K,V>{
 		
 	}
 	
+	private Node<K,V> searchNode(K key){
+		if(root != null) {
+			
+			return searchNodeRecursive(key,root);
+			
+		}
+		
+		else {
+			
+			return null;
+			
+		}
+	}
+	
+	private Node<K,V> searchNodeRecursive(K key, Node<K,V> currentNode){	
+		
+		if(key.compareTo(currentNode.getKey()) == 0) {
+			
+			return currentNode;
+			
+		}
+		
+		else if(key.compareTo(currentNode.getKey()) >  0) {
+			
+			return searchNodeRecursive(key, currentNode.getRight());
+			
+		}
+		
+		else {
+			
+			return searchNodeRecursive(key, currentNode.getLeft());
+			
+		}		
+		
+	}
 	//--------------------------------------------------------------------------------
 	
-	public int getWeight() {
-		
-		return weight;
-		
+	public int getWeight() {		
+		return weight;		
 	}
 	
 	//--------------------------------------------------------------------------------
 
-	@Override
-	public int getDepth(Node<K, V> root) {
+	public int getHeight() {
+		return getHeight(root);
+	}
+	
+	private int getHeight(Node<K,V> root) {	
 		
 		if(root == null) {
 			
@@ -260,14 +284,14 @@ public class BinarySearchTree<K extends Comparable<K>,V> implements Tree<K,V>{
 			
 		} else {
 			
-			return 1 + Math.max(getDepth(root.getLeft()), getDepth(root.getRight()));
+			return 1 + Math.max(getHeight(root.getLeft()), getHeight(root.getRight()));
 			
 		}
 				
 	}
 	
 	//--------------------------------------------------------------------------------
-
+	/*
 	@Override
 	public void preOrder() {
 		
@@ -342,11 +366,9 @@ public class BinarySearchTree<K extends Comparable<K>,V> implements Tree<K,V>{
 	}
 	
 	//--------------------------------------------------------------------------------
-	
-	public boolean treeIsEmpty() {	
-		
+	*/
+	public boolean isEmpty() {			
 		return root == null;
-		
 	}
 	
 	//--------------------------------------------------------------------------------
