@@ -14,9 +14,11 @@ public class AVLTree<K extends Comparable<K>,V> extends BinarySearchTree<K,V> im
 			AVLTreeNode<K,V> replacementNode = new AVLTreeNode<>(addedNode.getKey(), addedNode.getValue());
 			
 			if(addedNode == root) {
-				root = replacementNode;			
+				root = replacementNode;	
+				return true;
 			}
 			else {
+				//Fixes changed node
 				Node<K,V> left = addedNode.getLeft();
 				Node<K,V> right = addedNode.getRight();
 				Node<K,V> parent = addedNode.getParent();
@@ -39,71 +41,79 @@ public class AVLTree<K extends Comparable<K>,V> extends BinarySearchTree<K,V> im
 				else {
 					parent.setRight(replacementNode);
 				}
-			}	
-			
-			AVLTreeNode<K,V> prevPrevCurrentNode = null;
-			AVLTreeNode<K,V> prevCurrentNode = replacementNode;
-			AVLTreeNode<K,V> currentNode = (AVLTreeNode<K,V>)replacementNode.getParent();
-			
-			boolean balance = false;
-			
-			while(!balance && currentNode != null) {
-				currentNode.update();		
 				
-				if(Math.abs(currentNode.getBalanceFactor()) > 1) {
-					balance = true;
-				}
-				else {
-					prevPrevCurrentNode = prevCurrentNode;
-					prevCurrentNode = currentNode;
-					currentNode = (AVLTreeNode<K,V>)currentNode.getParent();
-				}			
-			}
-			
-			if(balance) {
-				if(currentNode.getLeft() == prevCurrentNode) {
-					
-					if(prevCurrentNode.getRight() != null && prevCurrentNode.getRight() == prevPrevCurrentNode) {
-						rotateLeft(prevCurrentNode);
-					}			
-					
-					currentNode = rotateRight(currentNode);
-				}
-				else {
-					
-					if(prevCurrentNode.getLeft() != null && prevCurrentNode.getLeft() == prevPrevCurrentNode) {
-						rotateRight(prevCurrentNode);
-					}
-					
-					currentNode = rotateLeft(currentNode);
-				}				
-			}
-			
-			
-			while(currentNode != null) {
-				currentNode.update();
-				currentNode = (AVLTreeNode<K,V>)currentNode.getParent();
-			}
-			
-			return true;
+				//Checks for balance and balance if necessary
+				AVLTreeNode<K,V> currentNode = (AVLTreeNode<K,V>)replacementNode.getParent();
+								
+				while(currentNode != null) {
+					currentNode.updateAVLNode();						
+					balanceNode(currentNode);					
+					currentNode = (AVLTreeNode<K, V>) currentNode.getParent();
+				}							
+				return true;
+			}				
 		}
 		else {
 			return false;
 		}
 	}
 	
-	public boolean remove(K key) {
-		boolean removed = super.remove(key);
-		
-		if(removed) {
-			//balance tree, only nodes that changed
+	
+	private AVLTreeNode<K,V> balanceNode (AVLTreeNode<K,V> node){
+		int nodeBF = node.getBalanceFactor();
+		if(Math.abs(nodeBF) > 1 && node != null) {
+			if(nodeBF > 1 && node.getRight() != null) {
+				
+				AVLTreeNode<K,V> right =  (AVLTreeNode<K,V>) node.getRight();
+				
+				if(right.getBalanceFactor() < 0) {
+					rotateRight(right);
+				}
+				 
+				return rotateLeft(node);
+			}
+			else if(nodeBF < -1 && node.getLeft() != null){
+				
+				AVLTreeNode<K,V> left =  (AVLTreeNode<K,V>) node.getLeft();
+				if(left.getBalanceFactor() >= 0) {
+					rotateLeft(left);
+				}
+				
+				return rotateRight(node);
+				
+			}
+			else {
+				return node;
+			}			
 		}
+		else {
+			return node;
+		}
+	}
+	
+	public boolean remove(K key) {		
+		
+		Node<K,V> removed = super.removeBase(key);
+		AVLTreeNode<K,V> removedParent = (removed == null)? null : (AVLTreeNode<K,V>) removed.getParent();		
+		
+		if(removed != null) {			
+			AVLTreeNode<K,V> currentNode = removedParent;
+						
+			while(currentNode != null) {				
+				currentNode.updateAVLNode();	
+				balanceNode(currentNode);
+				currentNode = (AVLTreeNode<K,V>) currentNode.getParent();					
+			}						
 			
-		return removed;
+			return true;
+		}
+		else {
+			return false;
+		}		
 	}
 	
 	//This method does not fix the balance factor of nodes that are not modified here
-	//Returns previous left
+	//Returns new subtree root
 	private AVLTreeNode<K,V> rotateRight(AVLTreeNode<K,V> node) {
 		if(node.getLeft() == null) {
 			return node;
@@ -138,18 +148,18 @@ public class AVLTree<K extends Comparable<K>,V> extends BinarySearchTree<K,V> im
 			left.setRight(node);
 			
 			//Update nodes heights and balance factors
-			node.update();
-			left.update();
+			node.updateAVLNode();
+			left.updateAVLNode();
 			
 			if(parent != null) {
-				parent.update();	
+				parent.updateAVLNode();	
 			}
 			
 			return left;
 		}		
 	}
 	//This method does not fix the balance factor of nodes that are not modified here
-	//Returns previous right
+	//Returns new subtree root
 	private AVLTreeNode<K,V> rotateLeft(AVLTreeNode<K,V> node) {
 		if(node.getRight() == null) {
 			return node;
@@ -161,10 +171,10 @@ public class AVLTree<K extends Comparable<K>,V> extends BinarySearchTree<K,V> im
 			//Updates node parent
 			if(node != root) {
 				if(parent.getRight() == node) {
-						parent.setLeft(right);
+						parent.setRight(right);
 				}
 				else {
-					parent.setRight(right);
+					parent.setLeft(right);
 				}	
 			}
 			else {
@@ -174,9 +184,9 @@ public class AVLTree<K extends Comparable<K>,V> extends BinarySearchTree<K,V> im
 			
 			//Updates Node			
 			node.setParent(right);
-			node.setLeft(right.getLeft());
+			node.setRight(right.getLeft());
 			
-			//Update left
+			//Update right
 			if(right.getLeft() != null) {
 				right.getLeft().setParent(node);
 			}
@@ -184,11 +194,11 @@ public class AVLTree<K extends Comparable<K>,V> extends BinarySearchTree<K,V> im
 			right.setLeft(node);
 			
 			//Update nodes heights and balance factors
-			node.update();
-			right.update();
+			node.updateAVLNode();
+			right.updateAVLNode();
 			
 			if(parent != null) {
-				parent.update();	
+				parent.updateAVLNode();	
 			}
 			
 			return right;

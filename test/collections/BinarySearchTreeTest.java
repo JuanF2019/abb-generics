@@ -1,13 +1,12 @@
 package collections;
 
 import static org.junit.jupiter.api.Assertions.*;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class BinarySearchTreeTest {
 	
 	BinarySearchTree<Integer,String> bst;
-
+	BinarySearchTree<Integer,Integer> bst2;
 	
 	void setUp1() {
 		bst = new BinarySearchTree<>();
@@ -35,6 +34,17 @@ class BinarySearchTreeTest {
 		bst.add(6,"");
 		bst.add(8,"");
 	}
+	
+	void setUp4() {
+		bst2 = new BinarySearchTree<>();
+		bst2.add(5,5);
+		bst2.add(3,3);
+		bst2.add(7,7);
+		bst2.add(2,2);
+		bst2.add(4,4);
+		bst2.add(6,6);
+		bst2.add(8,8);
+	}
 	@Test
 	void testAdd() {	
 		setUp1();
@@ -46,7 +56,7 @@ class BinarySearchTreeTest {
 		bst.add(2,"");
 		bst.add(4,"");
 		bst.add(8,"");
-		bst.add(3,"");
+		bst.add(3,"");		
 		
 		Node<Integer,String> root = bst.getRoot();
 		
@@ -57,7 +67,9 @@ class BinarySearchTreeTest {
 		assertEquals(root.getLeft().getRight().getKey(),2);
 		assertEquals(root.getLeft().getRight().getRight().getKey(),4);
 		assertEquals(root.getRight().getLeft().getKey(),8);
-		assertEquals(root.getLeft().getRight().getRight().getLeft().getKey(),3);		
+		assertEquals(root.getLeft().getRight().getRight().getLeft().getKey(),3);	
+		
+		
 	}
 	
 	@Test
@@ -101,7 +113,7 @@ class BinarySearchTreeTest {
 	}
 	
 	@Test
-	void testRemoveNodeWithTwoChilds() {
+	void testRemoveNodeWithTwoChildren() {
 		setUp3();
 		assertFalse(bst.remove(0));
 		assertTrue(bst.remove(5));
@@ -117,11 +129,22 @@ class BinarySearchTreeTest {
 		assertEquals(4,root.getLeft().getKey());
 		assertNull(root.getLeft().getRight());	
 		assertEquals(2,root.getLeft().getLeft().getKey());
-		assertNull(root.getLeft().getLeft().getRight());	
+		assertNull(root.getLeft().getLeft().getRight());		
+	}	
+	
+	@Test
+	void testSearch() {
+		setUp4();
+		assertEquals(5,bst2.search(5));
+		assertEquals(3,bst2.search(3));
+		assertEquals(7,bst2.search(7));
+		assertEquals(2,bst2.search(2));
+		assertEquals(4,bst2.search(4));
+		assertEquals(6,bst2.search(6));
+		assertEquals(8,bst2.search(8));
 		
-		
+		assertNull(bst2.search(-5));
+		assertNull(bst2.search(20));
+		assertNull(bst2.search(-15));
 	}
-	
-	
-	
 }

@@ -17,8 +17,7 @@ public class BinarySearchTree<K extends Comparable<K>,V> implements BinarySearch
 	}		
 	
 	//--------------------------------------------------------------------------------
-	
-	//Adds equal elements to the right, always adds the element
+		
 	public boolean add(K key, V value) {
 		return addBase(key,value) != null;
 	}
@@ -35,9 +34,7 @@ public class BinarySearchTree<K extends Comparable<K>,V> implements BinarySearch
 			weight++;			
 			return root;			
 		}			
-	}
-	
-	//--------------------------------------------------------------------------------
+	}	
 	
 	private Node<K,V> addRecursive(K key, V value, Node<K,V> currentNode, Node<K,V> newNode){
 		
@@ -49,7 +46,7 @@ public class BinarySearchTree<K extends Comparable<K>,V> implements BinarySearch
 				Node<K,V> addedNode = addRecursive(key,value,right,newNode);
 				
 				if(addedNode != null) {
-					right.update();
+					right.updateNode();
 				}				
 				
 				return addedNode;		
@@ -69,7 +66,7 @@ public class BinarySearchTree<K extends Comparable<K>,V> implements BinarySearch
 				Node<K,V> addedNode =  addRecursive(key,value,left,newNode);	
 				
 				if(addedNode != null) {
-					left.update();
+					left.updateNode();
 				}
 								
 				return addedNode;
@@ -88,42 +85,22 @@ public class BinarySearchTree<K extends Comparable<K>,V> implements BinarySearch
 	}
 	
 	//--------------------------------------------------------------------------------
-
-	@Override
-	public boolean update(K key, V value) {
-		
-		Node<K,V> nodeToUpdate = searchNode(key);
-		
-		if(nodeToUpdate != null) {
-			nodeToUpdate.setValue(value);
-			
-			return true;
-			
-		}
-		
-		else {
-			
-			return false;
-			
-		}	
-		
+	
+	public boolean remove(K key) {
+		return removeBase(key) != null;
 	}
 	
-	//--------------------------------------------------------------------------------
-
-	@Override
-	public boolean remove(K key) {	
+	//For case 3 returned node parent is not real parent
+	protected Node<K,V> removeBase(K key) {	
 		if(root != null) {
 			return removeRecursive(key,root,null);			
 		}		
 		else {
-			return false;
+			return null;
 		}
 	}
 	
-	//--------------------------------------------------------------------------------
-	
-	private boolean removeRecursive(K key, Node<K,V> currentNode, Node<K,V> parent){
+	private Node<K, V> removeRecursive(K key, Node<K,V> currentNode, Node<K,V> parent){
 		if(currentNode != null) {
 			if(key.compareTo(currentNode.getKey()) < 0) {
 				return removeRecursive(key, currentNode.getLeft(),currentNode);
@@ -131,7 +108,9 @@ public class BinarySearchTree<K extends Comparable<K>,V> implements BinarySearch
 			else if(key.compareTo(currentNode.getKey()) >  0) {
 				return removeRecursive(key, currentNode.getRight(),currentNode);
 			}
-			else {
+			else {	
+				Node<K,V> returnNode = new Node<>(currentNode.getKey(),currentNode.getValue());
+				returnNode.setParent(parent);
 				if(currentNode.getLeft() == null && currentNode.getRight() == null) {
 					
 					if(currentNode == root) {
@@ -144,7 +123,8 @@ public class BinarySearchTree<K extends Comparable<K>,V> implements BinarySearch
 						else {
 							parent.setLeft(null);
 						}						
-					}					
+					}	
+					returnNode = currentNode;
 					
 				}
 				else if(currentNode.getRight() == null) {	
@@ -161,9 +141,7 @@ public class BinarySearchTree<K extends Comparable<K>,V> implements BinarySearch
 							
 						else
 							parent.setLeft(currentNode.getLeft());						
-					}
-					
-					
+					}					
 				}
 				else if(currentNode.getLeft() == null) {
 					
@@ -178,29 +156,28 @@ public class BinarySearchTree<K extends Comparable<K>,V> implements BinarySearch
 							parent.setRight(currentNode.getRight());
 						else
 							parent.setLeft(currentNode.getRight());
-					}
-					
+					}					
 				}
 				else {
 					Node<K,V> rightMin = getMin(currentNode.getRight());
-										
+					returnNode = new Node<>(currentNode.getKey(),currentNode.getValue());	
+					
 					currentNode.setKey(rightMin.getKey());
-					currentNode.setValue(rightMin.getValue());					
+					currentNode.setValue(rightMin.getValue());				
+									
 					
-					removeRecursive(rightMin.getKey(),rightMin,rightMin.getParent());		
-					
+					returnNode.setParent(removeRecursive(rightMin.getKey(),rightMin,rightMin.getParent()).getParent());					
 				}
-				weight--;
-				return true;				
+				
+				weight--;								
+				return returnNode;				
 			}
 		}
 		else {
-			return false;
+			return null;
 		}
 	}
-	
-	//--------------------------------------------------------------------------------
-	
+		
 	private Node<K,V> getMin(Node<K,V> node){
 		
 		while(node.getLeft() != null) {
@@ -215,44 +192,15 @@ public class BinarySearchTree<K extends Comparable<K>,V> implements BinarySearch
 	
 	//--------------------------------------------------------------------------------
 	
-	@Override
 	public V search(K key) {	
 		
-		if(root != null) {
-			
-			return searchRecursive(key,root);
-			
-		}
-		
-		else {
-			
-			return null;
-			
-		}	
-		
-	}
-	
-	//--------------------------------------------------------------------------------
-	
-	private V searchRecursive(K key, Node<K,V> currentNode){	
-		
-		if(key.compareTo(currentNode.getKey()) == 0) {
-			
-			return currentNode.getValue();
-			
-		}
-		
-		else if(key.compareTo(currentNode.getKey()) >  0) {
-			
-			return searchRecursive(key, currentNode.getRight());
-			
-		}
-		
-		else {
-			
-			return searchRecursive(key, currentNode.getLeft());
-			
+		if(root != null) {		
+			Node<K,V> node = searchNodeRecursive(key,root);
+			return (node != null)? node.getValue() : null;			
 		}		
+		else {			
+			return null;			
+		}
 		
 	}
 	
@@ -271,26 +219,40 @@ public class BinarySearchTree<K extends Comparable<K>,V> implements BinarySearch
 	}
 	
 	private Node<K,V> searchNodeRecursive(K key, Node<K,V> currentNode){	
-		
-		if(key.compareTo(currentNode.getKey()) == 0) {
+		if(currentNode != null) {
+			if(key.compareTo(currentNode.getKey()) < 0) {	
+				return searchNodeRecursive(key, currentNode.getLeft());			
+			}
 			
-			return currentNode;
-			
+			else if(key.compareTo(currentNode.getKey()) >  0) {			
+				return searchNodeRecursive(key, currentNode.getRight());			
+			}
+			else {
+				return currentNode;
+			}
 		}
-		
-		else if(key.compareTo(currentNode.getKey()) >  0) {
-			
-			return searchNodeRecursive(key, currentNode.getRight());
-			
-		}
-		
-		else {
-			
-			return searchNodeRecursive(key, currentNode.getLeft());
-			
+		else {					
+			return null;	
 		}		
 		
 	}
+	//--------------------------------------------------------------------------------
+	
+	public boolean update(K key, V value) {
+		
+		Node<K,V> nodeToUpdate = searchNode(key);
+		
+		if(nodeToUpdate != null) {
+			nodeToUpdate.setValue(value);
+			
+			return true;			
+		}		
+		else {			
+			return false;			
+		}	
+		
+	}
+	
 	//--------------------------------------------------------------------------------
 	
 	public int getWeight() {		
@@ -300,104 +262,94 @@ public class BinarySearchTree<K extends Comparable<K>,V> implements BinarySearch
 	//--------------------------------------------------------------------------------
 
 	public int getHeight() {
-		return getHeight(root);
-	}
-	
-	private int getHeight(Node<K,V> root) {	
-		
-		if(root == null) {
-			
-			return 0;
-			
-		} else {
-			
-			return 1 + Math.max(getHeight(root.getLeft()), getHeight(root.getRight()));
-			
-		}
-				
-	}
-	
-	//--------------------------------------------------------------------------------
-	/*
-	@Override
-	public void preOrder() {
-		
-		ayudantePreOrder(root);
-		
-	}
+		return root.getHeight();
+	}	
 	
 	//--------------------------------------------------------------------------------
 	
-	private void ayudantePreOrder(Node<K, V> root) {
-		
-		if(root == null) {
-			
-			return;
-			
-		}
-		
-		System.out.print(root.getValue() + " ");
-		ayudantePreOrder(root.getLeft());
-		ayudantePreOrder(root.getRight());
-		
-	}
-	
-	//--------------------------------------------------------------------------------
-
-	@Override
-	public void inOrder() {
-		
-		ayudanteInOrder(root);
-		
-	}
-	
-	//--------------------------------------------------------------------------------
-	
-	private void ayudanteInOrder(Node<K, V> root) {
-		
-		if(root == null) {
-			
-			return;
-			
-		}
-		
-		ayudanteInOrder(root.getLeft());
-		System.out.print(root.getValue() + " ");
-		ayudanteInOrder(root.getRight());
-		
-	}
-	
-	//--------------------------------------------------------------------------------
-
-	@Override
-	public void postOrder() {
-		
-		ayudantePostOrder(root);
-		
-	}
-	
-	//--------------------------------------------------------------------------------
-	
-	private void ayudantePostOrder(Node<K, V> root) {
-		
-		if(root == null) {
-			
-			return;
-			
-		}
-		
-		ayudantePostOrder(root.getLeft());
-		ayudantePostOrder(root.getRight());
-		System.out.print(root.getValue() + " ");
-		
-	}
-	
-	//--------------------------------------------------------------------------------
-	*/
 	public boolean isEmpty() {			
 		return root == null;
 	}
+		
+	//--------------------------------------------------------------------------------
+	
+	@Override
+	public String preOrder() {
+		if(root == null) {
+			return null;
+		}
+		else {			
+			return preOrder(root,"");
+		}		
+	}	
+	
+	private String preOrder(Node<K, V> currentNode, String preOrder) {
+		
+		if(currentNode == null) {
+			return preOrder;
+		}
+		else {
+			preOrder += "<" + currentNode.getKey() + "," + currentNode.getValue() + "," +currentNode.getHeight() + "> ";
+			preOrder += (currentNode instanceof AVLTreeNode<?,?>? ((AVLTreeNode<K,V>)currentNode).getBalanceFactor():"");
+			preOrder = preOrder(currentNode.getLeft(),preOrder);
+			preOrder = preOrder(currentNode.getRight(),preOrder);
+			return preOrder;
+		}		
+	}
+	
+	//--------------------------------------------------------------------------------
 
+	@Override	
+	public String inOrder() {
+		if(root == null) {
+			return null;
+		}
+		else {			
+			return inOrder(root,"");
+		}		
+	}	
+	
+	private String inOrder(Node<K, V> currentNode, String inOrder) {
+		
+		if(currentNode == null) {
+			return inOrder;
+		}
+		else {
+			inOrder = inOrder(currentNode.getLeft(),inOrder);
+			inOrder += "<" + currentNode.getKey() + "," + currentNode.getValue() + "> ";			
+			inOrder = inOrder(currentNode.getRight(),inOrder);
+			return inOrder;
+		}		
+	}	
+	
+	//--------------------------------------------------------------------------------
+
+	@Override	
+	public String postOrder() {
+		if(root == null) {
+			return null;
+		}
+		else {			
+			return postOrder(root,"");
+		}		
+	}	
+	
+	private String postOrder(Node<K, V> currentNode, String postOrder) {
+		
+		if(currentNode == null) {
+			return postOrder;
+		}
+		else {
+			postOrder = postOrder(currentNode.getLeft(),postOrder);						
+			postOrder = postOrder(currentNode.getRight(),postOrder);
+			postOrder += "<" + currentNode.getKey() + "," + currentNode.getValue() + "> ";
+			return postOrder;
+		}		
+	}	
+	
+	
+	//--------------------------------------------------------------------------------
+	
 	//For testing purposes
 	protected Node<K,V> getRoot() {
 		return root;

@@ -11,7 +11,7 @@ public class AVLTreeNode<K extends Comparable<K>, V> extends Node<K, V> {
 	public int getBalanceFactor() { return balanceFactor; }
 	public void setBalanceFactor(int balanceFactor) { this.balanceFactor = balanceFactor; }
 	
-	public void update() {		
+	public void updateAVLNode() {		
 		int lh =  left != null? ((AVLTreeNode<K,V>)left).height:0;
 		int rh =  right != null? ((AVLTreeNode<K,V>)right).height:0;
 		

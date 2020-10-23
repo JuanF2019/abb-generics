@@ -14,7 +14,7 @@ public class Node<K extends Comparable<K>,V> {
 		height = 1;
 	}
 
-	public void update() {
+	public void updateNode() {
 		int lh =  left != null? left.height:0;
 		int rh =  right != null? right.height:0;
 		
