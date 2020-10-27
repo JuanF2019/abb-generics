@@ -1,7 +1,7 @@
 package collections;
 
 public class AVLTree<K extends Comparable<K>,V> extends BinarySearchTree<K,V> implements BinarySearchTreeInterface<K,V>{
-		
+			
 	public AVLTree() {
 		super();
 	}
@@ -15,13 +15,13 @@ public class AVLTree<K extends Comparable<K>,V> extends BinarySearchTree<K,V> im
 			
 			if(addedNode == root) {
 				root = replacementNode;	
+				
 				return true;
 			}
 			else {
-				//Fixes changed node
-				Node<K,V> left = addedNode.getLeft();
-				Node<K,V> right = addedNode.getRight();
-				Node<K,V> parent = addedNode.getParent();
+				AVLTreeNode<K,V> left = (AVLTreeNode<K,V>)addedNode.getLeft();
+				AVLTreeNode<K,V> right = (AVLTreeNode<K,V>)addedNode.getRight();
+				AVLTreeNode<K,V> parent = (AVLTreeNode<K,V>)addedNode.getParent();
 							
 				replacementNode.setLeft(left);
 				replacementNode.setRight(right);
@@ -104,7 +104,7 @@ public class AVLTree<K extends Comparable<K>,V> extends BinarySearchTree<K,V> im
 				balanceNode(currentNode);
 				currentNode = (AVLTreeNode<K,V>) currentNode.getParent();					
 			}						
-			
+	 
 			return true;
 		}
 		else {
